@@ -16,11 +16,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @Transactional
@@ -144,7 +143,67 @@ public class ClientServiceImpl implements ClientService {
         return ResponseEntity.ok(new ApiResponse<>("Success", "Appointment canceled successfully", appointment));
     }
 
+    @Override
+    public ResponseEntity<?> getAvailableHours(LocalDate startDate, LocalDate endDate) {
+        // Step 1: Get all employees
+        List<Employee> employees = employeeRepository.findAll();
 
+        // Step 2: Create a map to store available time slots for each day, god bless data structures.
+        Map<LocalDate, List<LocalTime>> availableTimeSlots = new HashMap<>();
+
+        // Step 3: Define the range of hours for the salon, for now between 7 and 9
+        LocalTime salonOpenTime = LocalTime.of(7, 0);
+        LocalTime salonCloseTime = LocalTime.of(21, 0);
+        List<LocalTime> timeSlots = generateTimeSlots(salonOpenTime, salonCloseTime, 30); // 30 min intervals
+
+        // Step 4: Check employee's schedule and availability for each day in the range
+        for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
+            availableTimeSlots.put(date, new ArrayList<>());
+
+            for (Employee employee : employees) {
+                if (employee.isActive() && employee.getCurrentStatus() == EmployeeStatus.AVAILABLE) {
+                    Schedule schedule = employee.getWorkSchedule();
+                    TimeRange timeRange = schedule.getWorkSchedule().get(date.getDayOfWeek());
+
+                    if (timeRange != null) {
+                        LocalTime start = timeRange.getStartTime();
+                        LocalTime end = timeRange.getEndTime();
+
+                        // Filter time slots based on the employee's schedule
+                        for (LocalTime timeSlot : timeSlots) {
+                            if (timeSlot.isAfter(start) && timeSlot.isBefore(end)) {
+                                availableTimeSlots.get(date).add(timeSlot);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Step 5: Remove booked slots from available hours for the current date
+            List<Appointment> appointmentsOnDate = appointmentRepository.findByAppointmentDateTimeBetween(
+                    date.atStartOfDay(),
+                    date.atTime(23, 59, 59));
+
+            for (Appointment appointment : appointmentsOnDate) {
+                LocalDateTime appointmentTime = appointment.getAppointmentDateTime();
+                if (appointmentTime.toLocalDate().equals(date)) {
+                    availableTimeSlots.get(date).remove(appointmentTime.toLocalTime());
+                }
+            }
+        }
+
+        // Step 6: Return available time slots
+        return ResponseEntity.ok(new ApiResponse<>("Success", "Available hours retrieved successfully", availableTimeSlots));
+    }
+
+    // Helper method to generate time slots based on the salon hours and interval
+    private List<LocalTime> generateTimeSlots(LocalTime start, LocalTime end, int intervalMinutes) {
+        List<LocalTime> slots = new ArrayList<>();
+        for (LocalTime time = start; time.isBefore(end); time = time.plusMinutes(intervalMinutes)) {
+            slots.add(time);
+        }
+        return slots;
+    }
 
     // Method to create the appointment
     private Appointment createAppointment(LocalDateTime date, Employee employee, List<Services> servicesList, double totalPrice, String clientId) {
