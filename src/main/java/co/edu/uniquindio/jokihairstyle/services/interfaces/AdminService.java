@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 public interface AdminService {
 
     ResponseEntity<?> createEmployee(CreateEmployeeDTO createEmployeeDTO);
-    ResponseEntity<?> updateEmployee(UpdateEmployeeDTO updateEmployeeDTO);
+    ResponseEntity<?> updateEmployee(String employeeId, UpdateEmployeeDTO updateEmployeeDTO);
+    ResponseEntity<?> getEmployeeInfo(String clientId);
     ResponseEntity<?> deleteEmployee(String employeeId);
 }

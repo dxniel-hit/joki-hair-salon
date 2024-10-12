@@ -17,7 +17,7 @@ public class Employee {
 
     @Id private String employeeId;
     private String completeName;
-    private Schedule workSchedule;
+    private Schedule workSchedule; // TODO Update this in the ScheduleController.
     private boolean active; // Means if he is attending to work, not if he is between work schedule.
     private List<String> skills; // Haircuts, coloring, beard, etc.
     private List<String> reviews; // Client given reviews.
