@@ -6,6 +6,7 @@ import co.edu.uniquindio.jokihairstyle.dtos.UpdateEmployeeDTO;
 import co.edu.uniquindio.jokihairstyle.model.Employee;
 import co.edu.uniquindio.jokihairstyle.model.noncollection.EmployeeStatus;
 import co.edu.uniquindio.jokihairstyle.model.noncollection.Schedule;
+import co.edu.uniquindio.jokihairstyle.model.noncollection.Services;
 import co.edu.uniquindio.jokihairstyle.repositories.EmployeeRepository;
 import co.edu.uniquindio.jokihairstyle.services.interfaces.AdminService;
 import co.edu.uniquindio.jokihairstyle.utils.ApiResponse;
@@ -34,10 +35,10 @@ public class AdminServiceImpl implements AdminService {
             Employee newEmployee = getNewEmployee(createEmployeeDTO);
 
             // Save the employee
-            Employee savedEmployee = employeeRepository.save(newEmployee);
+            employeeRepository.save(newEmployee);
 
             // Return a success response
-            ApiResponse<Employee> response = new ApiResponse<>("Success", "Employee created", savedEmployee);
+            ApiResponse<Employee> response = new ApiResponse<>("Success", "Employee created", newEmployee);
             return new ResponseEntity<>(response, HttpStatus.CREATED);
         } catch (Exception e) {
             ApiResponse<String> response = new ApiResponse<>("Error", "Failed to create employee", null);
@@ -117,7 +118,7 @@ public class AdminServiceImpl implements AdminService {
     private static ApiResponse<GetEmployeeInfoDTO> getCreateEmployeeDTOApiResponse(Optional<Employee> employee) {
         String completeName = employee.get().getCompleteName();
         Schedule workSchedule = employee.get().getWorkSchedule();
-        List<String> skills = employee.get().getSkills();
+        List<Services> skills = employee.get().getSkills();
 
         GetEmployeeInfoDTO dto = new GetEmployeeInfoDTO(completeName, workSchedule, skills);
         return new ApiResponse<>("Success", "Client info returned", dto);

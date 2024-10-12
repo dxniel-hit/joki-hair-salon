@@ -2,6 +2,7 @@ package co.edu.uniquindio.jokihairstyle.model;
 
 import co.edu.uniquindio.jokihairstyle.model.noncollection.EmployeeStatus;
 import co.edu.uniquindio.jokihairstyle.model.noncollection.Schedule;
+import co.edu.uniquindio.jokihairstyle.model.noncollection.Services;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.annotation.Id;
@@ -19,7 +20,7 @@ public class Employee {
     private String completeName;
     private Schedule workSchedule; // TODO Update this in the ScheduleController.
     private boolean active; // Means if he is attending to work, not if he is between work schedule.
-    private List<String> skills; // Haircuts, coloring, beard, etc.
+    private List<Services> skills; // Haircuts, coloring, beard, etc.
     private List<String> reviews; // Client given reviews.
     private LocalDate hireDate; // To calculate vacation days
     private EmployeeStatus currentStatus; // On Break, With Client, etc.
