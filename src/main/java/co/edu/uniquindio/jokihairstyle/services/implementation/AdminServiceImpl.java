@@ -1,6 +1,7 @@
 package co.edu.uniquindio.jokihairstyle.services.implementation;
 
 import co.edu.uniquindio.jokihairstyle.dtos.CreateEmployeeDTO;
+import co.edu.uniquindio.jokihairstyle.dtos.UpdateEmployeeDTO;
 import co.edu.uniquindio.jokihairstyle.model.Employee;
 import co.edu.uniquindio.jokihairstyle.model.noncollection.EmployeeStatus;
 import co.edu.uniquindio.jokihairstyle.repositories.EmployeeRepository;
@@ -49,6 +50,10 @@ public class AdminServiceImpl implements AdminService {
         }
     }
 
+    @Override
+    public ResponseEntity<?> updateEmployee(UpdateEmployeeDTO updateEmployeeDTO) {
+        return null;
+    }
 
 
     @Override
