@@ -1,5 +1,6 @@
 package co.edu.uniquindio.jokihairstyle.services.implementation;
 
+import co.edu.uniquindio.jokihairstyle.dtos.LoadAppointmentHistoryDTO;
 import co.edu.uniquindio.jokihairstyle.model.Appointment;
 import co.edu.uniquindio.jokihairstyle.model.Client;
 import co.edu.uniquindio.jokihairstyle.model.Employee;
@@ -216,5 +217,91 @@ public class ClientServiceImpl implements ClientService {
         appointment.setStatus(AppointmentStatus.SCHEDULED); // Default status is Scheduled
 
         return appointment;
+    }
+
+        @Override
+    public ResponseEntity<?> loadAppointmentHistory(String clientId, int page, int size) {
+
+        // Obtain the client
+        Optional<Client> clientOptional = clientRepository.findById(clientId);
+        if (clientOptional.isEmpty()) {
+            return ResponseEntity.status(404).body(new ApiResponse<>("Error", "Client not found", null));
+        }
+        Client client = clientOptional.get();
+
+        List<Appointment> clientAppointmentHistory = client.getAppointmentHistory();
+        List<LoadAppointmentHistoryDTO> appointmentDTOs = new ArrayList<>();
+
+        // Iterate to map the appointment as dto
+        for (Appointment appointment : clientAppointmentHistory) {
+            // Get the employee
+            Optional<Employee> employeeOptional = employeeRepository.findById(appointment.getEmployeeId());
+            if (employeeOptional.isEmpty()) {
+                return ResponseEntity.status(404).body(new ApiResponse<>("Error", "Employee not found", null));
+            }
+            String employeeName = employeeOptional.get().getCompleteName();
+
+            // dto mapping
+            // Map to the DTO
+            LoadAppointmentHistoryDTO dto = new LoadAppointmentHistoryDTO(
+                    employeeName,
+                    appointment.getAppointmentDateTime(),
+                    appointment.getServices(),
+                    appointment.getPrice(),
+                    appointment.getStatus()
+            );
+            appointmentDTOs.add(dto);
+        }
+
+        // Paginate the appointments list to the front
+        int totalElements = appointmentDTOs.size();  // Total number of events found
+        int totalPages = (int) Math.ceil((double) totalElements / size);  // Calculate total number of pages
+        int startIndex = page * size;  // Calculate the start index for the page, this will be usually just be zero.
+        int endIndex = Math.min(startIndex + size, totalElements);  // Calculate the end index for the page
+
+        // This is just comparing if there are enough elements to show on a certain page. Usually 0>=appointmentDTOs.size() will be evaluated.
+        if (startIndex >= totalElements) {
+            return new ResponseEntity<>(new ApiResponse<>("Success", "No appointment to show", List.of()), HttpStatus.OK);
+        }
+
+        // Get the paginated sublist
+        List<Appointment> paginatedEvents = clientAppointmentHistory.subList(startIndex, endIndex);
+
+        // Prepare pagination metadata
+        Map<String, Object> paginationData = new HashMap<>();
+        paginationData.put("totalPages", totalPages);
+        paginationData.put("currentPage", page);
+        paginationData.put("totalElements", totalElements);
+        paginationData.put("content", paginatedEvents);  // The paginated events for the current page
+
+        ApiResponse<Map<String, Object>> response = new ApiResponse<>("Success", "Appointment history loaded", paginationData);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    // Method to give a Review as a client
+    @Override
+    public ResponseEntity<?> leaveReview(String appointmentId, Review review) {
+
+        // Find the appointment
+        Optional<Appointment> appointmentOptional = appointmentRepository.findById(appointmentId);
+        if (appointmentOptional.isEmpty()) {
+            return ResponseEntity.status(404).body(new ApiResponse<>("Error", "Appointment not found", null));
+        }
+
+        // Obtain the employee of the appointment
+        String employeeId = appointmentOptional.get().getEmployeeId();
+        Optional<Employee> employeeOptional = employeeRepository.findById(employeeId);
+        if (employeeOptional.isEmpty()) {
+            return ResponseEntity.status(404).body(new ApiResponse<>("Error", "Employee not found", null));
+        }
+
+        // Add the review to the Employee
+        Employee employee = employeeOptional.get();
+        employee.getReviews().add(review);
+        employeeRepository.save(employee);
+
+        // Should I return or not the employee?
+        return ResponseEntity.ok(new ApiResponse<>("Success", "Employee reviewed", employee));
+
     }
 }
