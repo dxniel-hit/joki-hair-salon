@@ -3,12 +3,15 @@ package co.edu.uniquindio.jokihairstyle.services.implementation;
 import co.edu.uniquindio.jokihairstyle.dtos.CreateEmployeeDTO;
 import co.edu.uniquindio.jokihairstyle.dtos.GetEmployeeInfoDTO;
 import co.edu.uniquindio.jokihairstyle.dtos.UpdateEmployeeDTO;
+import co.edu.uniquindio.jokihairstyle.model.Client;
 import co.edu.uniquindio.jokihairstyle.model.Employee;
 import co.edu.uniquindio.jokihairstyle.model.noncollection.EmployeeStatus;
 import co.edu.uniquindio.jokihairstyle.model.noncollection.Schedule;
 import co.edu.uniquindio.jokihairstyle.model.noncollection.Services;
+import co.edu.uniquindio.jokihairstyle.repositories.ClientRepository;
 import co.edu.uniquindio.jokihairstyle.repositories.EmployeeRepository;
 import co.edu.uniquindio.jokihairstyle.services.interfaces.AdminService;
+import co.edu.uniquindio.jokihairstyle.services.interfaces.EmailService;
 import co.edu.uniquindio.jokihairstyle.utils.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -16,17 +19,18 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
 @Service
 @Transactional
 @RequiredArgsConstructor
 public class AdminServiceImpl implements AdminService {
 
     private final EmployeeRepository employeeRepository;
+    private final ClientRepository clientRepository;
+    private final EmailService emailService;
+
 
     @Override
     public ResponseEntity<?> createEmployee(CreateEmployeeDTO createEmployeeDTO) {
@@ -141,4 +145,29 @@ public class AdminServiceImpl implements AdminService {
         ApiResponse<String> response = new ApiResponse<>("Success", "Employee deleted", null);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
+    @Override
+    public ResponseEntity<?> sendDiscountCodeToAllClients() {
+        // Obtain all the clients
+        List<Client> clients = clientRepository.findAll();
+
+        for (Client client : clients) {
+            emailService.sendDiscountEmail(client.getEmail());
+        }
+
+        return ResponseEntity.ok(new ApiResponse<String>("Success", "Coupon sent to all clients", null));
+    }
+
+    @Override
+    public ResponseEntity<?> sendDiscountCodeToOneClient(String clientId) {
+        Optional<Client> client = clientRepository.findById(clientId);
+        if (client.isEmpty()) {
+            ApiResponse<String> response = new ApiResponse<>("Error", "Client not found", null);
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+        }
+
+        emailService.sendDiscountEmail(client.get().getEmail());
+        return ResponseEntity.ok(new ApiResponse<String>("Success", "Coupon sent to one client", null));
+    }
+
 }

@@ -10,6 +10,8 @@ import java.util.List;
 
 public interface ClientService {
 
+    // TODO Claim coupon method, that would update the ShoppingCart price.
+
     ResponseEntity<?> bookAppointment(String clientId, LocalDateTime date, List<Services> servicesList);
     ResponseEntity<?> cancelAppointment(String clientId);
     ResponseEntity<?> getAvailableHours(LocalDate startDate, LocalDate endDate);

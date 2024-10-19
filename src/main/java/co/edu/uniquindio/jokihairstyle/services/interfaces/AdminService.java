@@ -10,4 +10,6 @@ public interface AdminService {
     ResponseEntity<?> updateEmployee(String employeeId, UpdateEmployeeDTO updateEmployeeDTO);
     ResponseEntity<?> getEmployeeInfo(String clientId);
     ResponseEntity<?> deleteEmployee(String employeeId);
+    ResponseEntity<?> sendDiscountCodeToAllClients();
+    ResponseEntity<?> sendDiscountCodeToOneClient(String clientId);
 }
