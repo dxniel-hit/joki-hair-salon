@@ -16,6 +16,6 @@ public class Client {
     private String phoneNumber;
     private String email;
     private List<Appointment> appointmentHistory; // To store previous appointments
-    // TODO Add a buying cart attribute.
+    private ShoppingCart shoppingCart;
 }
 

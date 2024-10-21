@@ -1,13 +1,14 @@
 package co.edu.uniquindio.jokihairstyle.services.implementation;
 
+import co.edu.uniquindio.jokihairstyle.dtos.AddProductToShoppingCartDTO;
 import co.edu.uniquindio.jokihairstyle.dtos.LoadAppointmentHistoryDTO;
-import co.edu.uniquindio.jokihairstyle.model.Appointment;
-import co.edu.uniquindio.jokihairstyle.model.Client;
-import co.edu.uniquindio.jokihairstyle.model.Employee;
+import co.edu.uniquindio.jokihairstyle.dtos.StoreProductInShoppingCartDTO;
+import co.edu.uniquindio.jokihairstyle.model.*;
 import co.edu.uniquindio.jokihairstyle.model.noncollection.*;
 import co.edu.uniquindio.jokihairstyle.repositories.AppointmentRepository;
 import co.edu.uniquindio.jokihairstyle.repositories.ClientRepository;
 import co.edu.uniquindio.jokihairstyle.repositories.EmployeeRepository;
+import co.edu.uniquindio.jokihairstyle.repositories.ProductRepository;
 import co.edu.uniquindio.jokihairstyle.services.interfaces.ClientService;
 import co.edu.uniquindio.jokihairstyle.utils.ApiResponse;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +31,7 @@ public class ClientServiceImpl implements ClientService {
     private final ClientRepository clientRepository;
     private final EmployeeRepository employeeRepository;
     private final AppointmentRepository appointmentRepository;
+    private final ProductRepository productRepository;
 
 
     /**
@@ -304,4 +306,83 @@ public class ClientServiceImpl implements ClientService {
         return ResponseEntity.ok(new ApiResponse<>("Success", "Employee reviewed", employee));
 
     }
+
+    @Override
+    public ResponseEntity<?> loadProductsPage(int page, int size) {
+        List<Product> productList;
+
+        try {
+            productList = productRepository.findAll();
+        } catch (Exception e) {
+            return new ResponseEntity<>(new ApiResponse<String>("Error", e.getMessage(), null), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        int totalElements = productList.size();
+        int totalPages = (int) Math.ceil((double) totalElements / size);
+        int startIndex = page * size;
+        int endIndex = Math.min(startIndex + size, totalElements);
+        if (startIndex >= totalElements) {
+            return new ResponseEntity<>(new ApiResponse<>("Success", "No appointment to show", List.of()), HttpStatus.OK);
+        }
+
+        List<Product> paginatedEvents = productList.subList(startIndex, endIndex);
+
+        // Prepare pagination metadata
+        Map<String, Object> paginationData = new HashMap<>();
+        paginationData.put("totalPages", totalPages);
+        paginationData.put("currentPage", page);
+        paginationData.put("totalElements", totalElements);
+        paginationData.put("content", paginatedEvents);
+        ApiResponse<Map<String, Object>> response = new ApiResponse<>("Success", "Products loaded", paginationData);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    // Pretty straightforward method
+    @Override
+    public ResponseEntity<?> addProductToShoppingCart(String clientId, AddProductToShoppingCartDTO productDTO) {
+
+        // Obtain the product, if possible
+        Optional<Product> productOptional = productRepository.findById(productDTO.productId());
+        if (productOptional.isEmpty()) {
+            return ResponseEntity.status(404).body(new ApiResponse<>("Error", "Product not found", null));
+        }
+        Product product = productOptional.get();
+        double totalPrice = product.getPrice() * productDTO.quantity();
+
+        // Encapsulate the product to add it to the Clients shopping cart.
+        StoreProductInShoppingCartDTO storeProductInShoppingCartDTO = new StoreProductInShoppingCartDTO(
+                product.getName(), totalPrice, productDTO.quantity(), product.getBrand()
+        );
+        // Obtain the client
+        Optional<Client> clientOptional = clientRepository.findById(clientId);
+        if (clientOptional.isEmpty()) {
+            return ResponseEntity.status(404).body(new ApiResponse<>("Error", "Client not found", null));
+        }
+        Client client = clientOptional.get();
+        client.getShoppingCart().getProductsInShoppingCart().add(storeProductInShoppingCartDTO);
+
+        return new ResponseEntity<>(new ApiResponse<>("Success", "Product added to shopping cart", null), HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<?> deleteProductFromShoppingCart(String clientId, String productName) {
+
+        // Get the client
+        Client client = clientRepository.findById(clientId).orElse(null);
+        if ( client == null) {
+            return new ResponseEntity<>(new ApiResponse<>("Error" , "This will never output haha", null), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        ShoppingCart shoppingCart = client.getShoppingCart();
+        List<StoreProductInShoppingCartDTO> storeProductInShoppingCartDTOs = shoppingCart.getProductsInShoppingCart();
+        for (int i = 0; i < storeProductInShoppingCartDTOs.size(); i++) {
+            String currentProductName = storeProductInShoppingCartDTOs.get(i).productName();
+            if (currentProductName.equals(productName)) {
+                storeProductInShoppingCartDTOs.remove(i);
+                break;
+            }
+        }
+        return new ResponseEntity<>(new ApiResponse<>("Success", "Product deleted", null), HttpStatus.OK);
+    }
+
+
 }
