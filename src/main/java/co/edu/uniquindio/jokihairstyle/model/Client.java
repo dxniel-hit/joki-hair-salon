@@ -14,7 +14,9 @@ public class Client {
     @Id private String clientId;
     private String fullName;
     private String phoneNumber;
-    private String email;
+    private String username;
+    private String password;
+    private boolean active;
     private List<Appointment> appointmentHistory; // To store previous appointments
     private ShoppingCart shoppingCart;
 }

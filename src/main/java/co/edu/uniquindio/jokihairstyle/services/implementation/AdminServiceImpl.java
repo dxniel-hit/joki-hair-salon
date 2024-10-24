@@ -152,7 +152,7 @@ public class AdminServiceImpl implements AdminService {
         List<Client> clients = clientRepository.findAll();
 
         for (Client client : clients) {
-            emailService.sendDiscountEmail(client.getEmail());
+            emailService.sendDiscountEmail(client.getUsername());
         }
 
         return ResponseEntity.ok(new ApiResponse<String>("Success", "Coupon sent to all clients", null));
@@ -166,7 +166,7 @@ public class AdminServiceImpl implements AdminService {
             return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
         }
 
-        emailService.sendDiscountEmail(client.get().getEmail());
+        emailService.sendDiscountEmail(client.get().getUsername());
         return ResponseEntity.ok(new ApiResponse<String>("Success", "Coupon sent to one client", null));
     }
 
