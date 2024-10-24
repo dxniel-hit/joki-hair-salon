@@ -83,7 +83,7 @@ public class AuthServiceImpl implements AuthService {
             // Save the new client in the repository
             clientRepository.save(newClient);
 
-            return new ResponseEntity<>(new ApiResponse<>("Success", "Client registered successfully", null), HttpStatus.CREATED);
+            return new ResponseEntity<>(new ApiResponse<String>("Success", "Client registered successfully", newClient.getClientId()), HttpStatus.CREATED);
 
         } catch (Exception e) {
             return new ResponseEntity<>(new ApiResponse<>("Error", "Registration failed", e.toString()), HttpStatus.INTERNAL_SERVER_ERROR);
