@@ -5,6 +5,7 @@ import co.edu.uniquindio.jokihairstyle.dtos.LoginClientDTO;
 import co.edu.uniquindio.jokihairstyle.dtos.RegisterClientDTO;
 import co.edu.uniquindio.jokihairstyle.model.Admin;
 import co.edu.uniquindio.jokihairstyle.model.Client;
+import co.edu.uniquindio.jokihairstyle.model.ShoppingCart;
 import co.edu.uniquindio.jokihairstyle.repositories.AdminRepository;
 import co.edu.uniquindio.jokihairstyle.repositories.ClientRepository;
 import co.edu.uniquindio.jokihairstyle.services.interfaces.AuthService;
@@ -15,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.Optional;
 
 @Service
@@ -52,8 +54,39 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public ResponseEntity<?> registerClient(RegisterClientDTO request) {
-        return null;
+        try {
+            // Check if the email or username is already taken
+            Optional<Client> existingClientByEmail = clientRepository.findByEmail(request.email());
+            Optional<Client> existingClientByUsername = clientRepository.findByUsername(request.username());
+
+            if (existingClientByEmail.isPresent()) {
+                return new ResponseEntity<>(new ApiResponse<>("Error", "Email is already in use", null), HttpStatus.BAD_REQUEST);
+            }
+
+            if (existingClientByUsername.isPresent()) {
+                return new ResponseEntity<>(new ApiResponse<>("Error", "Username is already taken", null), HttpStatus.BAD_REQUEST);
+            }
+
+            // Create a new Client object
+            Client newClient = new Client();
+            newClient.setEmail(request.email());
+            newClient.setUsername(request.username());
+            newClient.setPassword(request.password()); // Store the raw password
+            newClient.setFullName(request.username()); // Assuming username as fullName, adjust as needed
+            newClient.setActive(true);
+            newClient.setAppointmentHistory(new ArrayList<>()); // Initialize with an empty appointment history
+            newClient.setShoppingCart(new ShoppingCart()); // Initialize a new shopping cart
+
+            // Save the new client in the repository
+            clientRepository.save(newClient);
+
+            return new ResponseEntity<>(new ApiResponse<>("Success", "Client registered successfully", null), HttpStatus.CREATED);
+
+        } catch (Exception e) {
+            return new ResponseEntity<>(new ApiResponse<>("Error", "Registration failed", e.toString()), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
+
 
     @Override
     public ResponseEntity<?> loginClient(LoginClientDTO request) {
