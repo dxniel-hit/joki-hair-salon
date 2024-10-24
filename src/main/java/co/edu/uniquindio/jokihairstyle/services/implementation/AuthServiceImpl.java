@@ -70,6 +70,9 @@ public class AuthServiceImpl implements AuthService {
             // Create a new Client object
             Client newClient = new Client();
             newClient.setEmail(request.email());
+
+            // Send
+
             newClient.setUsername(request.username());
             newClient.setPassword(request.password()); // Store the raw password
             newClient.setFullName(request.username()); // Assuming username as fullName, adjust as needed
