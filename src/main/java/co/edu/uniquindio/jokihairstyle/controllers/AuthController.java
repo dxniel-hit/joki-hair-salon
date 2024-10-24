@@ -30,13 +30,13 @@ public class AuthController {
 
     // Register client
     @PostMapping("/client/register")
-    public ResponseEntity<?> registerClient(@RequestBody @Valid RegisterClientDTO request) {
+    public ResponseEntity<?> registerClient(@RequestBody RegisterClientDTO request) {
         return authService.registerClient(request);
     }
 
     // Login for client
     @PostMapping("/client/login")
-    public ResponseEntity<?> loginClient(@RequestBody @Valid LoginClientDTO request) {
+    public ResponseEntity<?> loginClient(@RequestBody LoginClientDTO request) {
         return authService.loginClient(request);
     }
 }

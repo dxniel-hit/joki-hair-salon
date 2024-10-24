@@ -35,7 +35,7 @@ public class AuthServiceImpl implements AuthService {
             Optional<Admin> adminDB = adminRepository.findByUsername(username);
             if (adminDB.isPresent()) {
                 if (password.equals(adminDB.get().getPassword())) {
-                    ApiResponse<Admin> response = new ApiResponse<>("Success", "Logged in", adminDB.get());
+                    ApiResponse<String> response = new ApiResponse<>("Success", "Logged in", adminDB.get().getAdminId());
                     return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
                 } else {
                     ApiResponse<String> response = new ApiResponse<>("Error", "Invalid username or password", null);
@@ -101,8 +101,8 @@ public class AuthServiceImpl implements AuthService {
                 Client client = clientDB.get();
                 if(client.isActive()) {
                     if (password.equals(clientDB.get().getPassword())) {
-                        ApiResponse<Client> response = new ApiResponse<>("Success", "Logged in", clientDB.get());
-                        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+                        ApiResponse<String> response = new ApiResponse<>("Success", "Logged in", clientDB.get().getClientId());
+                        return new ResponseEntity<>(response, HttpStatus.OK);
                     } else {
                         ApiResponse<String> response = new ApiResponse<>("Error", "Invalid username or password", null);
                         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
